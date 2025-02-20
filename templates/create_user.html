@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Create User{% endblock %}
+{% block content %}
+
+    <h1 class="text-3xl font-bold mb-4">Create New User</h1>
+
+    <form method="POST" class="max-w-3xl mx-auto bg-gradient-to-r shadow-md rounded-lg p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">  <div class="mb-4">
+                <label for="name" class="block text-gray-700 font-bold mb-2">Name:</label>
+                <input type="text" name="name" id="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.name if request.form.name }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="rfid" class="block text-gray-70 font-bold mb-2">RFID:</label>
+                <input type="text" name="rfid" id="rfid" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.rfid if request.form.rfid }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="gender" class="block text-gray-70 font-bold mb-2">Gender:</label>
+                <select name="gender" id="gender" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                    <option value="Male" {% if request.form.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if request.form.gender == 'Female' %}selected{% endif %}>Female</option>
+                    <option value="Other" {% if request.form.gender == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label for="age" class="block text-gray-70 font-bold mb-2">Age:</label>
+                <input type="number" name="age" id="age" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.age if request.form.age }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="dob" class="block text-gray-70 font-bold mb-2">Date of Birth:</label>
+                <input type="date" name="dob" id="dob" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.dob if request.form.dob }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="telephone" class="block text-gray-700 font-bold mb-2">Telephone:</label>
+                <input type="tel" name="telephone" id="telephone" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.telephone if request.form.telephone }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="email" class="block text-gray-70 font-bold mb-2">Email:</label>
+                <input type="email" name="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.email if request.form.email }}" required>
+            </div>
+            <div class="mb-4">
+                <label for="role" class="block text-gray-70 font-bold mb-2">Role:</label>
+                <input type="text" name="role" id="role" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ request.form.role if request.form.role }}" required>
+            </div>
+            <div class="mb-6">
+                <label for="password" class="block text-gray-70 font-bold mb-2">Password:</label>
+                <input type="password" name="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+            </div>
+        </div>  <div class="mt-6">
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                Create
+            </button>
+            <a href="/users" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2">
+                Back to User List
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Delete User{% endblock %}
+{% block content %}
+    <h1>Delete User</h1>
+    <p>Are you sure you want to delete {{ user.username }}?</p>
+    <form method="POST">
+        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    </form>
+    <a href="/users" class="btn btn-secondary">No, Go Back</a>
+{% endblock %}

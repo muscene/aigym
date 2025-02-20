@@ -1,0 +1,7 @@
+Flask
+flask_sqlalchemy
+flask_login
+werkzeug
+pandas
+scikit-learn
+pickle5
