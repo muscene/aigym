@@ -1,7 +1,7 @@
-Flask
-flask_sqlalchemy
-flask_login
-werkzeug
-pandas
-scikit-learn
-pickle5
+Flask==3.1.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Werkzeug==3.1.3
+pandas==2.2.2
+scikit-learn==1.5.1
+pickle5 (Not listed in the provided list; it might not be needed for modern Python versions)
