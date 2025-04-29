@@ -1,21 +1,54 @@
-{% extends "base.html" %}
-{% block title %}Add Sensor Data{% endblock %}
-{% block content %}
-    <h1>Add Sensor Data</h1>
-    <form method="POST">
-        <div class="form-group">
-            <label for="weight">Weight (kg):</label>
-            <input type="number" name="weight" id="weight" class="form-control" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Sensor Data | Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-xl font-bold">Fitness App</a>
+            <div class="space-x-4">
+                <a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('list_users') }}" class="hover:underline">Manage Users</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="height">Height (cm):</label>
-            <input type="number" name="height" id="height" class="form-control" required>
-        </div>
-        <div class="form-group">
-            <label for="ecg">ECG Data:</label>
-            <textarea name="ecg" id="ecg" class="form-control"></textarea>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-    <a href="/some_route" class="btn btn-secondary">Back</a>  </form>
-{% endblock %}
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto mt-8 p-4 max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Add Sensor Data</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'red-100 text-red-700' if category == 'danger' else 'green-100 text-green-700' }} p-4 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('add_sensor_data') }}" class="space-y-4">
+            <div>
+                <label for="weight" class="block text-gray-700">Weight (kg)</label>
+                <input type="number" step="0.1" name="weight" id="weight" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="height" class="block text-gray-700">Height (cm)</label>
+                <input type="number" step="0.1" name="height" id="height" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="ecg" class="block text-gray-700">ECG</label>
+                <input type="text" name="ecg" id="ecg" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Add Data</button>
+        </form>
+        <p class="mt-4"><a href="{{ url_for('dashboard') }}" class="text-blue-600 hover:underline">Back to Dashboard</a></p>
+    </div>
+</body>
+</html>

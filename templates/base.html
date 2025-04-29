@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}User Management{% endblock %}</title>
+    <title>{% block title %}Gym Metrics{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Sidebar styles */
         .sidebar {
             width: 250px;
-            background-color: #f0f0f0;
-            padding: 1rem;
+            background-color: #1e40af; /* Blue background */
+            padding: 1.5rem;
             height: 100vh;
             position: fixed;
             top: 0;
@@ -19,99 +19,215 @@
             overflow-y: auto;
             transition: transform 0.3s ease-in-out;
             z-index: 1000;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
         .dark .sidebar {
-            background-color: #1f2937;
+            background-color: #1f2937; /* Dark mode background */
         }
         .sidebar a {
-            display: block;
-            padding: 0.5rem 0;
-            color: #333;
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            color: #ffffff; /* White text */
             text-decoration: none;
             transition: background-color 0.3s, color 0.3s;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
         }
         .dark .sidebar a {
             color: #e2e8f0;
         }
         .sidebar a:hover {
-            background-color: #ddd;
-            color: #007bff;
+            background-color: #3b82f6; /* Lighter blue on hover */
+            color: #ffffff;
         }
         .dark .sidebar a:hover {
             background-color: #374151;
-            color: #2c3035;
+        }
+        .sidebar .active {
+            background-color: #2563eb; /* Active link */
+            font-weight: bold;
         }
         /* Main content */
         .main-content {
             margin-left: 250px;
-            padding: 20px;
+            padding: 2rem;
+            min-height: calc(100vh - 64px); /* Adjust for navbar height */
         }
         /* Navbar */
         .navbar {
-            background-color: #24282d;
-            padding: 10px;
-            color: rgb(46, 31, 31);
-            text-align: center;
+            background-color: #1e3a8a; /* Dark blue navbar */
+            padding: 1rem;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            height: 64px;
+            z-index: 999;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .dark .navbar {
-            background-color: #1f2937;
+            background-color: #111827;
         }
         /* Mobile Sidebar */
         .mobile-menu {
             display: none;
+            padding: 1rem;
+            background-color: #1e40af;
+            color: #ffffff;
+            cursor: pointer;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1001;
         }
         @media (max-width: 768px) {
             .sidebar {
                 transform: translateX(-100%);
-                width: 100%;
-                position: absolute;
+                width: 75%;
+                position: fixed;
             }
             .sidebar.show {
                 transform: translateX(0);
             }
             .main-content {
                 margin-left: 0;
+                padding: 1rem;
+            }
+            .navbar {
+                left: 0;
             }
             .mobile-menu {
                 display: block;
-                padding: 10px;
-                background: #4a90e2;
-                color: white;
-                cursor: pointer;
-                text-align: center;
             }
+        }
+        /* Dark mode toggle */
+        .dark-mode-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 h-full">
     <!-- Mobile Menu Button -->
-    <div class="mobile-menu" onclick="toggleSidebar()">☰ Menu</div>
+    <div class="mobile-menu" onclick="toggleSidebar()">
+        <svg class="w-6 h-6 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+        </svg>
+        Menu
+    </div>
 
     <!-- Sidebar Navigation -->
     <div class="sidebar" id="sidebar">
-        <h2 class="text-xl font-semibold mb-4 text-black">Dashboard</h2>
-           
-        {% if current_user.is_authenticated %}
-            <!-- <a href="/profile">👤 Profile</a> -->
-            <a href="/logout" class="text-red-500">🚪 Logout</a>
-        {% else %}
-            <a href="/login">🔑 Login</a>
-        {% endif %}
+        <div class="flex items-center mb-6">
+            <h2 class="text-xl font-semibold text-white">Gym Metrics</h2>
+        </div>
+        <nav>
+            <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                Home
+            </a>
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10h6m-6 0H3m12 0h6" />
+                    </svg>
+                    Dashboard
+                </a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('list_users') }}" class="{% if request.endpoint == 'list_users' %}active{% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                        User List
+                    </a>
+                    <a href="{{ url_for('admin_login') }}" class="{% if request.endpoint == 'admin_login' %}active{% endif %}">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 2.21-1.79 4-4 4s-4-1.79-4-4 1.79-4 4-4 4 1.79 4 4zm0 0c0 2.21 1.79 4 4 4s4-1.79 4-4-1.79-4-4-4-4 1.79-4 4z" />
+                        </svg>
+                        Admin Panel
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="text-red-400 hover:bg-red-600 hover:text-white">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                </a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    Login
+                </a>
+                <a href="{{ url_for('admin_login') }}" class="{% if request.endpoint == 'admin_login' %}active{% endif %}">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 2.21-1.79 4-4 4s-4-1.79-4-4 1.79-4 4-4 4 1.79 4 4zm0 0c0 2.21 1.79 4 4 4s4-1.79 4-4-1.79-4-4-4-4 1.79-4 4z" />
+                    </svg>
+                    Admin Login
+                </a>
+            {% endif %}
+        </nav>
     </div>
+
     <!-- Top Navbar -->
     <div class="navbar">
-        <h1>{% block header %}Gym Metrics{% endblock %}</h1>
+        <div class="flex items-center">
+            <svg class="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <h1 class="text-xl font-semibold">{% block header %}Gym Metrics{% endblock %}</h1>
+        </div>
+        <div class="dark-mode-toggle" onclick="toggleDarkMode()">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+        </div>
     </div>
+
     <!-- Main Content Area -->
     <div class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="mb-4 p-4 rounded-lg 
+                        {% if category == 'success' %} bg-green-100 text-green-800 
+                        {% elif category == 'danger' %} bg-red-100 text-red-800 
+                        {% else %} bg-blue-100 text-blue-800 {% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
         {% block content %}{% endblock %}
     </div>
+
     <script>
+        // Toggle sidebar for mobile
         function toggleSidebar() {
             document.getElementById("sidebar").classList.toggle("show");
         }
-    </script>
 
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle("dark");
+            localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+        }
+
+        // Load theme from localStorage
+        if (localStorage.getItem("theme") === "dark" || (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.documentElement.classList.add("dark");
+        }
+    </script>
 </body>
 </html>

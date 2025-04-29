@@ -1,63 +1,44 @@
-{% extends "base.html" %}
-{% load static %}  {# Load the static tag #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Details | Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-xl font-bold">Fitness App</a>
+            <div class="space-x-4">
+                <a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+            </div>
+        </div>
+    </nav>
 
-{% block title %}User Details - {{ user.username }}{% endblock %}
-
-{% block content %}
-
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">User Profile</h2>
-                </div>
-                <div class="card-body">
-
-                    <table class="table table-borderless">  <tbody>
-                            <tr>
-                                <th>Username:</th>
-                                <td>{{ user.username }}</td>
-                            </tr>
-                            <tr>
-                                <th>Email:</th>
-                                <td>{{ user.email }}</td>
-                            </tr>
-                            {% if user.first_name %}
-                                <tr>
-                                    <th>First Name:</th>
-                                    <td>{{ user.first_name }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if user.last_name %}
-                                <tr>
-                                    <th>Last Name:</th>
-                                    <td>{{ user.last_name }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if user.last_login %}
-                                <tr>
-                                    <th>Last Login:</th>
-                                    <td>{{ user.last_login }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if user.date_joined %}
-                                <tr>
-                                    <th>Joined:</th>
-                                    <td>{{ user.date_joined }}</td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
-
-                    <div class="mt-4 d-flex justify-content-end">
-                        <a href="/users" class="btn btn-secondary me-2">Back to User List</a>
-                        <a href="/profile/edit" class="btn btn-primary">Edit Profile</a>
-                    </div>
-                </div>
+    <!-- Main Content -->
+    <div class="container mx-auto mt-8 p-4 max-w-2xl">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">User Details</h1>
+        <div class="bg-white p-6 rounded shadow-md">
+            <p class="mb-2"><strong>ID:</strong> {{ user.id }}</p>
+            <p class="mb-2"><strong>Name:</strong> {{ user.name }}</p>
+            <p class="mb-2"><strong>RFID:</strong> {{ user.rfid }}</p>
+            <p class="mb-2"><strong>Gender:</strong> {{ user.gender }}</p>
+            <p class="mb-2"><strong>Age:</strong> {{ user.age }}</p>
+            <p class="mb-2"><strong>Date of Birth:</strong> {{ user.dob }}</p>
+            <p class="mb-2"><strong>Telephone:</strong> {{ user.telephone }}</p>
+            <p class="mb-2"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="mb-2"><strong>Role:</strong> {{ user.role }}</p>
+            <div class="mt-4 space-x-2">
+                <a href="{{ url_for('edit_user', user_id=user.id) }}" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Edit</a>
+                <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                    <button type="submit" class="inline-block bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Delete</button>
+                </form>
+                <a href="{{ url_for('list_users') }}" class="inline-block bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Back to List</a>
             </div>
         </div>
     </div>
-</div>
-
-{% endblock %}
+</body>
+</html>

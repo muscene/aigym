@@ -1,40 +1,65 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data | Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-xl font-bold">Fitness App</a>
+            <div class="space-x-4">
+                <a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('list_users') }}" class="hover:underline">Manage Users</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+            </div>
+        </div>
+    </nav>
 
-{% block content %}
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Sensor Data Overview</h1>
-
-        <div class="overflow-x-auto bg-gray-500 shadow-lg rounded-lg">
-            <table class="min-w-full table-auto text-sm">
-                <thead class="bg-dark-200">
+    <!-- Main Content -->
+    <div class="container mx-auto mt-8 p-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Sensor Data</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'red-100 text-red-700' if category == 'danger' else 'green-100 text-green-700' }} p-4 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="overflow-x-auto">
+            <table class="w-full bg-white shadow-md rounded">
+                <thead class="bg-gray-200">
                     <tr>
-                        <th class="px-4 py-2 text-left">RFID</th>
-                        <th class="px-4 py-2 text-left">Weight (kg)</th>
-                        <th class="px-4 py-2 text-left">Height (cm)</th>
-                        <th class="px-4 py-2 text-left">BMI</th>
-                        <th class="px-4 py-2 text-left">ECG</th>
-                        <th class="px-4 py-2 text-left">Suggested Sport</th>
-                        <th class="px-4 py-2 text-left">Date & Time</th>
+                        <th class="p-3 text-left">RFID</th>
+                        
+                        <th class="p-3 text-left">BMI</th>
+                        <th class="p-3 text-left">ECG</th>
+                        <th class="p-3 text-left">Suggested Sport</th>
+                        <th class="p-3 text-left">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entry in data %}
                     <tr class="border-b">
-                        <td class="px-4 py-2">{{ entry.rfid }}</td>
-                        <td class="px-4 py-2">{{ entry.weight }}</td>
-                        <td class="px-4 py-2">{{ entry.height }}</td>
-                        <td class="px-4 py-2">{{ entry.bmi }}</td>
-                        <td class="px-4 py-2">{{ entry.ecg }}</td>
-                        <td class="px-4 py-2">{{ entry.suggested_sport }}</td>
-                        <td class="px-4 py-2">{{ entry.datetime }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="7" class="px-4 py-2 text-center text-gray-500">No sensor data available</td>
+                        <td class="p-3">{{ entry.rfid }}</td>
+                        
+                        <td class="p-3">{{ entry.bmi }}</td>
+                        <td class="p-3">{{ entry.ecg }}</td>
+                        <td class="p-3">{{ entry.suggested_sport }}</td>
+                        <td class="p-3">{{ entry.datetime }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+        <p class="mt-4"><a href="{{ url_for('dashboard') }}" class="text-blue-600 hover:underline">Back to Dashboard</a></p>
     </div>
-    {% endblock %}
+</body>
+</html>

@@ -1,21 +1,85 @@
-{% extends "base.html" %}
-{% block title %}Edit User{% endblock %}
-{% block content %}
-    <h1>Edit User</h1>
-    <form method="POST">
-        <div class="form-group">
-            <label for="username">Username:</label>
-            <input type="text" name="username" id="username" class="form-control" value="{{ user.username }}" required>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit User | Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-xl font-bold">Fitness App</a>
+            <div class="space-x-4">
+                <a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('list_users') }}" class="hover:underline">Manage Users</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="email">Email:</label>
-            <input type="email" name="email" id="email" class="form-control" value="{{ user.email }}" required>
-        </div>
-        <div class="form-group">
-            <label for="password">New Password (Optional):</label>
-            <input type="password" name="password" id="password" class="form-control">
-        </div>
-        <button type="submit" class="btn btn-primary">Update</button>
-    </form>
-    <a href="/users" class="btn btn-secondary">Back to User List</a>
-{% endblock %}
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto mt-8 p-4 max-w-md">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Edit User</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'red-100 text-red-700' if category == 'danger' else 'green-100 text-green-700' }} p-4 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('edit_user', user_id=user.id) }}" class="space-y-4">
+            <div>
+                <label for="name" class="block text-gray-700">Name</label>
+                <input type="text" name="name" id="name" value="{{ user.name }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="rfid" class="block text-gray-700">RFID</label>
+                <input type="text" name="rfid" id="rfid" value="{{ user.rfid }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="gender" class="block text-gray-700">Gender</label>
+                <select name="gender" id="gender" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+                    <option value="Male" {% if user.gender == 'Male' %}selected{% endif %}>Male</option>
+                    <option value="Female" {% if user.gender == 'Female' %}selected{% endif %}>Female</option>
+                    <option value="Other" {% if user.gender == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="age" class="block text-gray-700">Age</label>
+                <input type="number" name="age" id="age" value="{{ user.age }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="dob" class="block text-gray-700">Date of Birth</label>
+                <input type="date" name="dob" id="dob" value="{{ user.dob }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="telephone" class="block text-gray-700">Telephone</label>
+                <input type="text" name="telephone" id="telephone" value="{{ user.telephone }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="email" class="block text-gray-700">Email</label>
+                <input type="email" name="email" id="email" value="{{ user.email }}" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+            </div>
+            <div>
+                <label for="role" class="block text-gray-700">Role</label>
+                <select name="role" id="role" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600" required>
+                    <option value="admin" {% if user.role == 'admin' %}selected{% endif %}>Admin</option>
+                    <option value="user" {% if user.role == 'user' %}selected{% endif %}>User</option>
+                </select>
+            </div>
+            <div>
+                <label for="password" class="block text-gray-700">Password (leave blank to keep unchanged)</label>
+                <input type="password" name="password" id="password" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Update User</button>
+        </form>
+        <p class="mt-4"><a href="{{ url_for('user_details', user_id=user.id) }}" class="text-blue-600 hover:underline">Back to Details</a></p>
+    </div>
+</body>
+</html>

@@ -1,117 +1,225 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Plot | Fitness App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="{{ url_for('index') }}" class="text-xl font-bold">Fitness App</a>
+            <div class="space-x-4">
+                <a href="{{ url_for('dashboard') }}" class="hover:underline">Dashboard</a>
+                {% if current_user.role == 'admin' %}
+                    <a href="{{ url_for('list_users') }}" class="hover:underline">Manage Users</a>
+                {% endif %}
+                <a href="{{ url_for('logout') }}" class="hover:underline">Logout</a>
+            </div>
+        </div>
+    </nav>
 
-{% block content %}
-<div class="container mx-auto p-4">
-    <h1 class="text-3xl font-bold mb-4">Weight and BMI Line Graph</h1>
+    <!-- Main Content -->
+    <div class="container mx-auto mt-8 p-4">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">Sensor Data Plot</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="bg-{{ 'red-100 text-red-700' if category == 'danger' else 'green-100 text-green-700' }} p-4 rounded mb-4">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-    <div class="bg-dark shadow-md rounded-lg p-6 relative">
-          <canvas id="weightBmiChart" class="w-full h-96"></canvas>
-        <div class="absolute inset-0 bg-gradient-to-r from-indigo-200/50 via-purple-200/50 to-pink-200/50 rounded-lg pointer-events-none" id="gradientOverlay"></div>
+        <!-- Controls -->
+        <div class="bg-white p-6 rounded shadow-md mb-6">
+            <h2 class="text-lg font-semibold text-gray معني800 mb-4">Filter Options</h2>
+            <form id="filterForm" class="space-y-4">
+                <div class="flex flex-col md:flex-row md:space-x-4">
+                    <div class="flex-1">
+                        <label for="start_date" class="block text-gray-700">Start Date</label>
+                        <input type="date" id="start_date" name="start_date" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    </div>
+                    <div class="flex-1">
+                        <label for="end_date" class="block text-gray-700">End Date</label>
+                        <input type="date" id="end_date" name="end_date" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    </div>
+                </div>
+                {% if current_user.role == 'admin' %}
+                    <div>
+                        <label for="rfid" class="block text-gray-700">Select User (RFID)</label>
+                        <select id="rfid" name="rfid" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            <option value="">All Users</option>
+                            {% for user in users %}
+                                <option value="{{ user.rfid }}">{{ user.name }} ({{ user.rfid }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% else %}
+                    <div>
+                        <label for="user_rfid" class="block text-gray-700">Your RFID</label>
+                        <input type="text" id="user_rfid" value="{{ current_user.rfid }}" readonly class="w-full p-2 border rounded bg-gray-100">
+                    </div>
+                {% endif %}
+                <div class="flex space-x-4">
+                    <button type="button" onclick="updateCharts()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Apply Filters</button>
+                    <a href="/sensor_data/download" id="downloadLink" class="inline-block bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Download CSV</a>
+                </div>
+            </form>
+            <div class="mt-4">
+                <h3 class="text-md font-semibold text-gray-800 mb-2">Toggle Datasets</h3>
+                <div class="flex space-x-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="toggleBMI" checked class="mr-2">
+                        <span>BMI</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" id="toggleECG" checked class="mr-2">
+                        <span>ECG</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="bg-white p-6 rounded shadow-md mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Data Metrics</h2>
+            <div id="metrics" class="text-gray-700"></div>
+        </div>
+
+        <!-- Charts -->
+        <div class="bg-white p-6 rounded shadow-md mb-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Time Series Plot</h2>
+            <canvas id="sensorChart" class="w-full"></canvas>
+        </div>
+        <div class="bg-white p-6 rounded shadow-md">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Suggested Sports Distribution</h2>
+            <canvas id="sportsChart" class="w-full"></canvas>
+        </div>
+
+        <p class="mt-4"><a href="{{ url_for('dashboard') }}" class="text-blue-600 hover:underline">Back to Dashboard</a></p>
     </div>
 
     <script>
-        fetch('/sensor_data/plot')
-            .then(response => response.json())
-            .then(data => {
-                const dates = data.dates;
-                const weights = data.weights;
-                const bmis = data.bmis;
-                const ecg = data.ecg;
-                const ctx = document.getElementById('weightBmiChart').getContext('2d');
-                const chart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: dates,
-                        datasets: [{
-                            label: 'Weight (kg)',
-                            data: weights,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 3, // Add data points
-                            pointBackgroundColor: 'rgba(75, 192, 192, 1)'
-                        }, {
-                            label: 'BMI',
-                            data: bmis,
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgba(153, 102, 255, 1)'
+        let sensorChart, sportsChart;
+
+        function updateCharts() {
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const rfid = document.getElementById('rfid') ? document.getElementById('rfid').value : '';
+            // Only include rfid in URL for admins
+            const url = `/sensor_data/plot?start_date=${startDate}&end_date=${endDate}${rfid && document.getElementById('rfid') ? `&rfid=${rfid}` : ''}`;
+
+            // Update download link
+            document.getElementById('downloadLink').href = `/sensor_data/download?start_date=${startDate}&end_date=${endDate}${rfid && document.getElementById('rfid') ? `&rfid=${rfid}` : ''}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch data');
+                    return response.json();
+                })
+                .then(data => {
+                    // Update metrics
+                    const metricsDiv = document.getElementById('metrics');
+                    metricsDiv.innerHTML = `
+                        <p><strong>Data Points:</strong> ${data.metrics.data_points}</p>
+                        <p><strong>Average BMI:</strong> ${data.metrics.avg_bmi}</p>
+                        <p><strong>ECG Range:</strong> ${data.metrics.min_ecg} - ${data.metrics.max_ecg}</p>
+                    `;
+
+                    // Destroy existing charts
+                    if (sensorChart) sensorChart.destroy();
+                    if (sportsChart) sportsChart.destroy();
+
+                    // Time Series Chart
+                    const sensorCtx = document.getElementById('sensorChart').getContext('2d');
+                    sensorChart = new Chart(sensorCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: [
+                                {
+                                    label: 'BMI',
+                                    data: data.bmis,
+                                    borderColor: 'green',
+                                    fill: false,
+                                    hidden: !document.getElementById('toggleBMI').checked
+                                },
+                                {
+                                    label: 'ECG',
+                                    data: data.ecgs,
+                                    borderColor: 'red',
+                                    fill: false,
+                                    hidden: !document.getElementById('toggleECG').checked
+                                }
+                            ]
                         },
-                        {
-                            label: 'Heart Rate',
-                            data: ecg,
-                            borderColor: 'rgba(203, 202, 155, 1)',
-                            fill: false,
-                            tension: 0.4,
-                            pointRadius: 3,
-                            pointBackgroundColor: 'rgba(153, 102, 255, 1)'
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { title: { display: true, text: 'Date' } },
+                                y: { title: { display: true, text: 'Value' } }
+                            },
+                            plugins: {
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) label += ': ';
+                                            label += context.parsed.y;
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
                         }
-                    ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            x: {
-                                ticks: {
-                                    autoSkip: true,
-                                    maxTicksLimit: 10
-                                }
-                            },
-                            y: {
-                                beginAtZero: false,
-                                title: {
-                                    display: true,
-                                    text: 'Value'
-                                }
-                            }
-                        },
-                        plugins: {
-                            title: {
-                                display: true,
-                                text: 'Weight and BMI Over Time',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            // Add a subtle animation on chart creation
-                            animation: {
-                                duration: 1000, // Duration in milliseconds
-                                easing: 'easeOutQuad' // Easing function
-                            }
-                        },
-                        interaction: {
-                            intersect: false,
-                            mode: 'nearest',
-                        },
-                        hover: {
-                            intersect: false,
-                            mode: 'nearest'
-                        },
+                    });
 
-                    }
+                    // Sports Bar Chart
+                    const sportsCtx = document.getElementById('sportsChart').getContext('2d');
+                    sportsChart = new Chart(sportsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.sports.labels,
+                            datasets: [{
+                                label: 'Suggested Sports',
+                                data: data.sports.values,
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: { title: { display: true, text: 'Sport' } },
+                                y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('An error occurred while fetching data.');
                 });
+        }
 
-                // Add a subtle fade-in effect for the gradient overlay after the chart is drawn
-                const gradientOverlay = document.getElementById('gradientOverlay');
-                setTimeout(() => {
-                    gradientOverlay.style.opacity = 0; // Fade in (start from transparent)
-                    gradientOverlay.style.transition = 'opacity 1s ease-in-out';
-                }, 500); // Delay the fade-in slightly
-            })
-            .catch(error => {
-                console.error("Error fetching sensor data:", error);
-                const ctx = document.getElementById('weightBmiChart').getContext('2d');
-                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-                ctx.font = "16px Arial";
-                ctx.fillStyle = "red";
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText("Error loading data. Please try again later.", ctx.canvas.width / 2, ctx.canvas.height / 2);
-            });
+        // Toggle dataset visibility
+        document.getElementById('toggleBMI').addEventListener('change', () => {
+            sensorChart.data.datasets[0].hidden = !document.getElementById('toggleBMI').checked;
+            sensorChart.update();
+        });
+        document.getElementById('toggleECG').addEventListener('change', () => {
+            sensorChart.data.datasets[1].hidden = !document.getElementById('toggleECG').checked;
+            sensorChart.update();
+        });
+
+        // Initial chart load
+        updateCharts();
     </script>
-
-</div>
-{% endblock %}
+</body>
+</html>
