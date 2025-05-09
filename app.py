@@ -383,14 +383,82 @@ def add_sensor_data():
 
     return render_template('add_sensor_data.html')
 
+# @app.route('/api/sensor_data', methods=['POST'])
+# # @login_required
+# def add_sensor_data_api():
+#     try:
+#         data = request.get_json()
+#         if not data:
+#             return jsonify({"message": "No data provided"}), 400
+
+#         rfid = data.get('rfid')
+#         weight = data.get('weight')
+#         height = data.get('height')
+#         ecg = data.get('ecg')
+
+#         if not all([rfid, weight, height, ecg]):
+#             return jsonify({"message": "Missing required fields (rfid, weight, height, ecg)"}), 400
+
+#         # Ensure the RFID belongs to the current user or the user is an admin
+#         if rfid != current_user.rfid and current_user.role != 'admin':
+#             return jsonify({"message": "Unauthorized: Cannot add data for another user"}), 403
+
+#         current_user_data = User.query.filter_by(rfid=rfid).first()
+#         if not current_user_data:
+#             return jsonify({"message": "User not found"}), 404
+
+#         weight = float(weight)
+#         height = float(height)
+#         bmi = weight / (height / 100) ** 2
+#         date_time = datetime.now()
+
+#         resting_hr = ecg
+#         workout_hr = ecg
+
+#         input_data = pd.DataFrame([{
+#             'Age': current_user_data.age,
+#             'Height (cm)': height,
+#             'Weight (kg)': weight,
+#             'Resting HR': resting_hr,
+#             'Workout HR': workout_hr
+#         }])
+
+#         predicted_label = model.predict(input_data)[0]
+#         suggested_sport = le.inverse_transform([predicted_label])[0]
+
+#         new_sensor_data = SensorData(
+#             rfid=current_user_data.rfid,
+#             weight=weight,
+#             height=height,
+#             bmi=bmi,
+#             ecg=ecg,
+#             suggested_sport=suggested_sport,
+#             datetime=date_time
+#         )
+#         db.session.add(new_sensor_data)
+#         db.session.commit()
+
+#         return jsonify({
+#             "message": "Sensor data added successfully",
+#             "rfid": rfid,
+#             "bmi": round(bmi, 2),
+#             "ecg": ecg,
+#             "suggested_sport": suggested_sport
+#         }), 201
+
+#     except (ValueError, TypeError) as e:
+#         return jsonify({"message": f"Invalid input: {e}"}), 400
+
+#     except Exception as e:
+#         print(f"An error occurred: {e}")
+#         return jsonify({"message": "An error occurred"}), 500
 @app.route('/api/sensor_data', methods=['POST'])
-# @login_required
 def add_sensor_data_api():
     try:
-        data = request.get_json()
+        data = request.get_json()  # Get JSON data from request body
         if not data:
             return jsonify({"message": "No data provided"}), 400
-
+        # Extract data from request
         rfid = data.get('rfid')
         weight = data.get('weight')
         height = data.get('height')
@@ -398,53 +466,58 @@ def add_sensor_data_api():
 
         if not all([rfid, weight, height, ecg]):
             return jsonify({"message": "Missing required fields (rfid, weight, height, ecg)"}), 400
-
-        # Ensure the RFID belongs to the current user or the user is an admin
-        if rfid != current_user.rfid and current_user.role != 'admin':
-            return jsonify({"message": "Unauthorized: Cannot add data for another user"}), 403
-
-        current_user_data = User.query.filter_by(rfid=rfid).first()
-        if not current_user_data:
+        # 1️⃣ **Find the user whose rfid matches the sensor data rfid**
+        current_user = User.query.filter_by(rfid=rfid).first()
+        if not current_user:
             return jsonify({"message": "User not found"}), 404
 
+        # 2️⃣ **Compute BMI**
         weight = float(weight)
         height = float(height)
         bmi = weight / (height / 100) ** 2
         date_time = datetime.now()
 
+        # 3️⃣ **Dynamically set `resting_hr` and `workout_hr` to `ecg` (No DB update)**
         resting_hr = ecg
         workout_hr = ecg
 
+        # 4️⃣ **Prepare input data for prediction**
         input_data = pd.DataFrame([{
-            'Age': current_user_data.age,
+            'Age': current_user.age,
             'Height (cm)': height,
             'Weight (kg)': weight,
             'Resting HR': resting_hr,
             'Workout HR': workout_hr
         }])
 
+        # 5️⃣ **Predict Suggested Sport**
         predicted_label = model.predict(input_data)[0]
         suggested_sport = le.inverse_transform([predicted_label])[0]
 
+        # **Debugging: Check if predicted_sport is correct**
+        print(f"Predicted sport: {suggested_sport}")
+
+        # 6️⃣ **Save Sensor Data in the Database (Including `suggested_sport`)**
         new_sensor_data = SensorData(
-            rfid=current_user_data.rfid,
+            rfid=current_user.rfid,
             weight=weight,
             height=height,
             bmi=bmi,
             ecg=ecg,
-            suggested_sport=suggested_sport,
+            suggested_sport=suggested_sport,  # Save the predicted sport
             datetime=date_time
         )
         db.session.add(new_sensor_data)
         db.session.commit()
 
+        # Return response with suggested sport
         return jsonify({
             "message": "Sensor data added successfully",
             "rfid": rfid,
             "bmi": round(bmi, 2),
             "ecg": ecg,
             "suggested_sport": suggested_sport
-        }), 201
+        }), 201  # 201 Created
 
     except (ValueError, TypeError) as e:
         return jsonify({"message": f"Invalid input: {e}"}), 400
@@ -452,6 +525,7 @@ def add_sensor_data_api():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"message": "An error occurred"}), 500
+
 
 @app.route('/sensor_data')
 @login_required
