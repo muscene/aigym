@@ -384,7 +384,7 @@ def add_sensor_data():
     return render_template('add_sensor_data.html')
 
 @app.route('/api/sensor_data', methods=['POST'])
-@login_required
+# @login_required
 def add_sensor_data_api():
     try:
         data = request.get_json()
