@@ -362,7 +362,8 @@ def add_sensor_data():
             height = float(request.form['height'])
             ecg = request.form['ecg']
 
-            bmi = weight / (height / 100) ** 2
+            # bmi = weight / (height / 100) ** 2
+            bmi= float(request.form['bmi'])
             date_time = datetime.now()
 
             new_sensor_data = SensorData(rfid=current_user.rfid, weight=weight, height=height, bmi=bmi, ecg=ecg, datetime=date_time)
@@ -474,7 +475,7 @@ def add_sensor_data_api():
         # 2️⃣ **Compute BMI**
         weight = float(weight)
         height = float(height)
-        bmi = weight / (height / 100) ** 2
+        bmi= float(request.form['bmi'])
         date_time = datetime.now()
 
         # 3️⃣ **Dynamically set `resting_hr` and `workout_hr` to `ecg` (No DB update)**
@@ -514,7 +515,7 @@ def add_sensor_data_api():
         return jsonify({
             "message": "Sensor data added successfully",
             "rfid": rfid,
-            "bmi": round(bmi, 2),
+            "bmi": bmi,
             "ecg": ecg,
             "suggested_sport": suggested_sport
         }), 201  # 201 Created
